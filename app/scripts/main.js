@@ -1,5 +1,7 @@
 $(() => {
 
+  // TODO: pre-cache images
+
   const sessionSize = 5;
 
   // forever :: Promise x -> Promise x
@@ -40,26 +42,31 @@ $(() => {
     return result;
   }
 
-  function displayName(person) {
+  function displayName(i, person) {
     var name = document.querySelector('#name');
     name.innerText = person.name;
+    name.dataset.n = i;
   }
 
   function displayGallery(people) {
     var gallery = document.querySelectorAll('.photo img');
+
     for (var i=0; i<gallery.length; i++) {
       var img    = gallery[i];
       var person = people[i];
+
       img.setAttribute('src', person.url);
+      img.dataset.name = person.name;
     }
   }
 
   // playRound :: People -> Promise x
   function playRound(people) {
     var round   = randomn(people, sessionSize);
-    var testFor = round[randomInt(sessionSize)];
+    var targetI = randomInt(sessionSize);
+    var testFor = round[targetI];
 
-    displayName(testFor);
+    displayName(targetI, testFor);
     displayGallery(round);
 
     // TODO return promise
@@ -67,6 +74,25 @@ $(() => {
     // });
   }
 
+  function wireEvents() {
+    var name  = document.querySelector('#name');
+    var spans = document.querySelectorAll('.photo');
+
+    for (var i=0; i<spans.length; i++) {
+      spans[i].addEventListener('click', event => {
+        var n = +event.target.dataset.n;
+        var answer = +name.dataset.n;
+
+        if (n === answer) {
+          console.log('yay!');
+        } else {
+          console.log('loser');
+        }
+      });
+    }
+  }
+
+  wireEvents();
   $.getJSON('http://api.namegame.willowtreemobile.com/')
     .done(data => forever(playRound(data)));
 });
