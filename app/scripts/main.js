@@ -41,17 +41,23 @@ $(() => {
   }
 
   function displayName(person) {
+    var name = document.querySelector('#name');
+    name.innerText = person.name;
   }
 
   function displayGallery(people) {
+    var gallery = document.querySelectorAll('.photo img');
+    for (var i=0; i<gallery.length; i++) {
+      var img    = gallery[i];
+      var person = people[i];
+      img.setAttribute('src', person.url);
+    }
   }
 
   // playRound :: People -> Promise x
   function playRound(people) {
     var round   = randomn(people, sessionSize);
     var testFor = round[randomInt(sessionSize)];
-
-    console.log(testFor);
 
     displayName(testFor);
     displayGallery(round);
