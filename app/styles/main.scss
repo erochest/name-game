@@ -91,3 +91,27 @@ body {
     border-bottom: 0;
   }
 }
+
+.gallery {
+    width: 100%;
+    padding-bottom: 18.5%;
+    position: relative;
+
+    > div {
+        position: absolute;
+        top: 0; bottom: 0; left: 0; right: 0;
+
+        > span {
+            float: left;
+            width: 18.5%;
+            height: 100%;
+            margin-left: 1.85%;
+            background-color: red;
+        }
+
+        :first-of-type {
+            margin-left: 0%;
+        }
+    }
+
+}
