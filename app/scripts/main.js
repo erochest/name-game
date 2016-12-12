@@ -55,7 +55,8 @@ $(() => {
     people.forEach((person, i) => {
       buffer += `
         <div class="photo">
-          <img data-n="${i}" data-name="${person.name}" src="${person.url}">
+          <div class="shade">${person.name}</div>
+          <img data-n="${i}" src="${person.url}">
         </div>
         `;
     });
@@ -71,9 +72,7 @@ $(() => {
         var name = document.querySelector('#name');
 
         window.ev = ev;
-        console.log(ev);
 
-        ev.target.parentElement.classList.add('answered');
         if (name.dataset.n === ev.target.dataset.n) {
           ev.target.parentElement.classList.add('correct');
           // TODO: timeout
@@ -101,25 +100,6 @@ $(() => {
     // });
   }
 
-  function wireEvents() {
-    var name  = document.querySelector('#name');
-    var spans = document.querySelectorAll('.photo');
-
-    for (var i=0; i<spans.length; i++) {
-      spans[i].addEventListener('click', event => {
-        var n = +event.target.dataset.n;
-        var answer = +name.dataset.n;
-
-        if (n === answer) {
-          console.log('yay!');
-        } else {
-          console.log('loser');
-        }
-      });
-    }
-  }
-
-  wireEvents();
   $.getJSON('http://api.namegame.willowtreemobile.com/')
     .done(data => forever(playRound(data)));
 });

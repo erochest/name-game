@@ -124,21 +124,28 @@ body {
     cursor: pointer;
 }
 
-.answered:before {
-    content: "";
+.photo .shade {
+    color: hsla(0, 0%, 50%, 0);
+    font-weight: bold;
+    padding-left: 3px;
+    text-align: center;
     display: block;
     position: absolute;
-    top: 0;
+    top: 100%;
     bottom: 0;
     left: 0;
     right: 0;
-    transition: margin-top 3s ease-in;
+    transition: top 0.3s ease-in-out;
 }
 
-.wrong:before {
+.wrong .shade {
+    top: 0;
+    color: white;
     background: hsla(0, 80%, 40%, 0.5);
 }
 
-.correct:before {
+.correct .shade {
+    top: 0;
+    color: white;
     background: hsla(120, 80%, 40%, 0.5);
 }
