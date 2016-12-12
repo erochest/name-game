@@ -49,15 +49,41 @@ $(() => {
   }
 
   function displayGallery(people) {
-    var gallery = document.querySelectorAll('.photo img');
+    var gallery = document.querySelector('#gallery div');
+    var buffer  = "";
 
-    for (var i=0; i<gallery.length; i++) {
-      var img    = gallery[i];
-      var person = people[i];
+    people.forEach((person, i) => {
+      buffer += `
+        <div class="photo">
+          <img data-n="${i}" data-name="${person.name}" src="${person.url}">
+        </div>
+        `;
+    });
 
-      img.setAttribute('src', person.url);
-      img.dataset.name = person.name;
-    }
+    gallery.innerHTML = buffer;
+  }
+
+  function attachListeners() {
+    var photos = document.querySelectorAll('#gallery .photo');
+
+    photos.forEach(photo => {
+      photo.addEventListener('click', ev => {
+        var name = document.querySelector('#name');
+
+        window.ev = ev;
+        console.log(ev);
+
+        ev.target.parentElement.classList.add('answered');
+        if (name.dataset.n === ev.target.dataset.n) {
+          ev.target.parentElement.classList.add('correct');
+          // TODO: timeout
+          // TODO: call next item
+        } else {
+          ev.target.parentElement.classList.add('wrong');
+        }
+
+      }, { once: true });
+    });
   }
 
   // playRound :: People -> Promise x
@@ -68,6 +94,7 @@ $(() => {
 
     displayName(targetI, testFor);
     displayGallery(round);
+    attachListeners();
 
     // TODO return promise
     // return new Promise((resolve, reject) => {

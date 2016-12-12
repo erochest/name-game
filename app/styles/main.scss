@@ -92,7 +92,7 @@ body {
   }
 }
 
-.gallery {
+#gallery {
     width: 100%;
     padding-bottom: 18.5%;
     position: relative;
@@ -101,7 +101,8 @@ body {
         position: absolute;
         top: 0; bottom: 0; left: 0; right: 0;
 
-        > span {
+        > div {
+            position: relative;
             float: left;
             width: 18.5%;
             height: 100%;
@@ -117,4 +118,27 @@ body {
         }
     }
 
+}
+
+.photo {
+    cursor: pointer;
+}
+
+.answered:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transition: margin-top 3s ease-in;
+}
+
+.wrong:before {
+    background: hsla(0, 80%, 40%, 0.5);
+}
+
+.correct:before {
+    background: hsla(120, 80%, 40%, 0.5);
 }
