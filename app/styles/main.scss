@@ -124,10 +124,9 @@ body {
     cursor: pointer;
 }
 
-.photo .shade {
+.photo .name {
     color: hsla(0, 0%, 50%, 0);
     font-weight: bold;
-    padding-left: 3px;
     text-align: center;
     display: block;
     position: absolute;
@@ -135,17 +134,34 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    transition: top 0.3s ease-in-out;
+    transition: all 0.4s ease-in-out;
+}
+
+.photo .shade {
+    background: hsla(0, 80%, 40%, 0);
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transition: all 0.4s ease-in-out;
+}
+
+.wrong .name {
+    color: hsla(0, 100%, 100%, 1);
+    top: 80%;
 }
 
 .wrong .shade {
-    top: 0;
-    color: white;
     background: hsla(0, 80%, 40%, 0.5);
 }
 
+.correct .name {
+    color: hsla(120, 100%, 100%, 1);
+    top: 80%;
+}
+
 .correct .shade {
-    top: 0;
-    color: white;
     background: hsla(120, 80%, 40%, 0.5);
 }

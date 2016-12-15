@@ -55,8 +55,9 @@ $(() => {
     people.forEach((person, i) => {
       buffer += `
         <div class="photo">
-          <div class="shade">${person.name}</div>
-          <img data-n="${i}" src="${person.url}">
+          <div data-n="${i}" class="shade"></div>
+          <div class="name">${person.name}</div>
+          <img src="${person.url}">
         </div>
         `;
     });
@@ -75,7 +76,7 @@ $(() => {
 
         if (name.dataset.n === ev.target.dataset.n) {
           ev.target.parentElement.classList.add('correct');
-          timeout(2000).then(resolve);
+          timeout(3500).then(resolve);
         } else {
           ev.target.parentElement.classList.add('wrong');
         }
