@@ -4,17 +4,17 @@ $(() => {
 
   const sessionSize = 5;
 
-  // forever :: Promise x -> Promise x
-  function forever(promise) {
-    return promise.then(() => forever(promise));
+  // forever :: (() -> Promise x) -> Promise x
+  function forever(f) {
+    var promise = f();
+    return promise.then(() => forever(f));
   }
 
   // timeout :: Number -> Promise ()
-  function timeout(delay) {
+  function timeout(delay, value=null) {
     return new Promise((resolve, reject) => {
-      return window.setTimeout(() => resolve(null));
-    }
-    );
+      window.setTimeout(() => resolve(value), delay);
+    });
   }
 
   // randomInt :: Number -> Number
@@ -64,7 +64,7 @@ $(() => {
     gallery.innerHTML = buffer;
   }
 
-  function attachListeners() {
+  function attachListeners(resolve) {
     var photos = document.querySelectorAll('#gallery .photo');
 
     photos.forEach(photo => {
@@ -75,8 +75,7 @@ $(() => {
 
         if (name.dataset.n === ev.target.dataset.n) {
           ev.target.parentElement.classList.add('correct');
-          // TODO: timeout
-          // TODO: call next item
+          timeout(2000).then(resolve);
         } else {
           ev.target.parentElement.classList.add('wrong');
         }
@@ -88,18 +87,16 @@ $(() => {
   // playRound :: People -> Promise x
   function playRound(people) {
     var round   = randomn(people, sessionSize);
-    var targetI = randomInt(sessionSize);
+    var targetI = randomInt(sessionSize - 1);
     var testFor = round[targetI];
 
-    displayName(targetI, testFor);
-    displayGallery(round);
-    attachListeners();
-
-    // TODO return promise
-    // return new Promise((resolve, reject) => {
-    // });
+    return new Promise((resolve, reject) => {
+      displayName(targetI, testFor);
+      displayGallery(round);
+      attachListeners(resolve);
+    });
   }
 
   $.getJSON('http://api.namegame.willowtreemobile.com/')
-    .done(data => forever(playRound(data)));
+    .done(data => forever(() => playRound(data)));
 });
