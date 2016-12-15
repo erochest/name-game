@@ -50,7 +50,7 @@ $(() => {
 
   function displayGallery(people) {
     var gallery = document.querySelector('#gallery div');
-    var buffer  = "";
+    var buffer  = '';
 
     people.forEach((person, i) => {
       buffer += `
