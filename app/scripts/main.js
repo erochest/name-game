@@ -72,8 +72,6 @@ $(() => {
       photo.addEventListener('click', ev => {
         var name = document.querySelector('#name');
 
-        window.ev = ev;
-
         if (name.dataset.n === ev.target.dataset.n) {
           ev.target.parentElement.classList.add('correct');
           timeout(3500).then(resolve);
