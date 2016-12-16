@@ -1,101 +1,107 @@
-$(() => {
 
-  // TODO: pre-cache images
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-  const sessionSize = 5;
+// TODO: pre-cache images
 
-  // forever :: (() -> Promise x) -> Promise x
-  function forever(f) {
-    var promise = f();
-    return promise.then(() => forever(f));
-  }
+const sessionSize = 5;
 
-  // timeout :: Number -> Promise ()
-  function timeout(delay, value=null) {
-    return new Promise((resolve, reject) => {
-      window.setTimeout(() => resolve(value), delay);
-    });
-  }
+// forever :: (() -> Promise x) -> Promise x
+function forever(f) {
+  var promise = f();
+  return promise.then(() => forever(f));
+}
 
-  // randomInt :: Number -> Number
-  function randomInt(n) {
-    return Math.round(Math.random() * n);
-  }
+// timeout :: Number -> Promise ()
+function timeout(delay, value=null) {
+  return new Promise((resolve, reject) => {
+    window.setTimeout(() => resolve(value), delay);
+  });
+}
 
-  // randomn :: Array x -> Number -> Array x
-  function randomn(array, n) {
-    var result = array;
+// randomInt :: Number -> Number
+function randomInt(n) {
+  return Math.round(Math.random() * n);
+}
 
-    if (n < array.length) {
-      var seen = new Set();
-      result = [];
+// randomn :: Array x -> Number -> Array x
+function randomn(array, n) {
+  var result = array;
 
-      while (result.length < n) {
-        var i = randomInt(array.length);
-        if (! seen.has(i)) {
-          seen.add(i);
-          result.push(array[i]);
-        }
+  if (n < array.length) {
+    var seen = new Set();
+    result = [];
+
+    while (result.length < n) {
+      var i = randomInt(array.length);
+      if (! seen.has(i)) {
+        seen.add(i);
+        result.push(array[i]);
       }
     }
-
-    return result;
   }
 
-  function displayName(i, person) {
-    var name = document.querySelector('#name');
-    name.innerText = person.name;
-    name.dataset.n = i;
-  }
+  return result;
+}
 
-  function displayGallery(people) {
-    var gallery = document.querySelector('#gallery div');
-    var buffer  = '';
+function displayName(i, person) {
+  var name = document.querySelector('#name');
+  name.innerText = person.name;
+  name.dataset.n = i;
+}
 
-    people.forEach((person, i) => {
-      buffer += `
-        <div class="photo">
-          <div data-n="${i}" class="shade"></div>
-          <div class="name">${person.name}</div>
-          <img src="${person.url}">
-        </div>
-        `;
-    });
+function displayGallery(people) {
+  var gallery = document.querySelector('#gallery div');
+  var buffer  = '';
 
-    gallery.innerHTML = buffer;
-  }
+  people.forEach((person, i) => {
+    buffer += `
+      <div class="photo">
+        <div data-n="${i}" class="shade"></div>
+        <div class="name">${person.name}</div>
+        <img src="${person.url}">
+      </div>
+      `;
+  });
 
-  function attachListeners(resolve) {
-    var photos = document.querySelectorAll('#gallery .photo');
+  gallery.innerHTML = buffer;
+}
 
-    photos.forEach(photo => {
-      photo.addEventListener('click', ev => {
-        var name = document.querySelector('#name');
+function attachListeners(resolve) {
+  var photos = document.querySelectorAll('#gallery .photo');
 
-        if (name.dataset.n === ev.target.dataset.n) {
-          ev.target.parentElement.classList.add('correct');
-          timeout(3500).then(resolve);
-        } else {
-          ev.target.parentElement.classList.add('wrong');
-        }
+  photos.forEach(photo => {
+    photo.addEventListener('click', ev => {
+      var name = document.querySelector('#name');
 
-      }, { once: true });
-    });
-  }
+      if (name.dataset.n === ev.target.dataset.n) {
+        ev.target.parentElement.classList.add('correct');
+        timeout(3500).then(resolve);
+      } else {
+        ev.target.parentElement.classList.add('wrong');
+      }
 
-  // playRound :: People -> Promise x
-  function playRound(people) {
-    var round   = randomn(people, sessionSize);
-    var targetI = randomInt(sessionSize - 1);
-    var testFor = round[targetI];
+    }, { once: true });
+  });
+}
 
-    return new Promise((resolve, reject) => {
-      displayName(targetI, testFor);
-      displayGallery(round);
-      attachListeners(resolve);
-    });
-  }
+// playRound :: People -> Promise x
+function playRound(people) {
+  var round   = randomn(people, sessionSize);
+  var targetI = randomInt(sessionSize - 1);
+  var testFor = round[targetI];
 
-  $.getJSON('http://api.namegame.willowtreemobile.com/')
-    .done(data => forever(() => playRound(data)));
-});
+  return new Promise((resolve, reject) => {
+    displayName(targetI, testFor);
+    displayGallery(round);
+    attachListeners(resolve);
+  });
+}
+
+$.getJSON('http://api.namegame.willowtreemobile.com/')
+  .done(data => forever(() => playRound(data)));
+
+ReactDOM.render(
+  <h1>hello, world!</h1>,
+  document.getElementById('root')
+);

@@ -1,11 +1,15 @@
 // generated on 2016-12-02 using generator-webapp 2.3.2
 const gulp = require('gulp');
 const gulpLoadPlugins = require('gulp-load-plugins');
+const babelify = require('babelify');
 const browserSync = require('browser-sync').create();
+const browserify = require('browserify');
 const del = require('del');
-const wiredep = require('wiredep').stream;
-const runSequence = require('run-sequence');
 const ghPages = require('gulp-gh-pages');
+const pump = require('pump');
+const runSequence = require('run-sequence');
+const source = require('vinyl-source-stream');
+const wiredep = require('wiredep').stream;
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
@@ -28,18 +32,18 @@ gulp.task('styles', () => {
 });
 
 gulp.task('scripts', () => {
-  return gulp.src('app/scripts/**/*.js')
-    .pipe($.plumber())
-    .pipe($.sourcemaps.init())
-    .pipe($.babel())
-    .pipe($.sourcemaps.write('.'))
-    .pipe(gulp.dest('.tmp/scripts'))
-    .pipe(reload({stream: true}));
+  return browserify({entries: 'app/scripts/main.js', debug: true})
+      .transform(babelify)
+      .bundle()
+      .pipe($.plumber())
+      .pipe(source('app/scripts/main.js'))
+      .pipe(gulp.dest('.tmp/scripts'))
+      .pipe(reload({stream: true}));
 });
 
 function lint(files, options) {
   return gulp.src(files)
-    .pipe($.eslint({ fix: true }))
+    .pipe($.eslint({fix: true}))
     .pipe(reload({stream: true, once: true}))
     .pipe($.eslint.format())
     .pipe($.if(!browserSync.active, $.eslint.failAfterError()));
@@ -57,10 +61,20 @@ gulp.task('lint:test', () => {
 gulp.task('html', ['styles', 'scripts'], () => {
   return gulp.src('app/*.html')
     .pipe($.useref({searchPath: ['.tmp', 'app', '.']}))
-    .pipe($.if('*.js', $.uglify()))
+    // .pipe($.if('*.js', $.uglify()))
     .pipe($.if('*.css', $.cssnano({safe: true, autoprefixer: false})))
     .pipe($.if('*.html', $.htmlmin({collapseWhitespace: true})))
     .pipe(gulp.dest('dist'));
+});
+
+gulp.task('uglify', ['scripts'], (cb) => {
+  pump([
+      gulp.src('.tmp/scripts/**/*.js'),
+      $.uglify(),
+      gulp.dest('dist')
+    ],
+    cb
+  );
 });
 
 gulp.task('images', () => {
