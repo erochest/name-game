@@ -12,7 +12,6 @@
     }
 
     addAttempt(correct=false) {
-      console.trace('addAttempt');
       this.attempts += 1;
       if (correct) {
         this.correct += 1;
@@ -53,9 +52,7 @@
   function addAttempt(correct=false) {
     return getStats()
       .then(stats => {
-        // console.log('111', JSON.stringify(stats));
         stats.addAttempt(correct);
-        // console.log('222', JSON.stringify(stats));
         return stats;
       })
       .then(stats => localforage.setItem('stats', stats));
@@ -67,7 +64,13 @@
   window.addAttempt = addAttempt;
 
   function displayStats(stats) {
-    console.log(stats);
+    var div  = document.querySelector('#stats');
+    var html = `
+      <span class="attempts">${stats.attempts}</span> tries   /
+      <span class="correct" >${stats.correct }</span> correct /
+      <span class="streak"  >${stats.streak  }</span> streak
+      `;
+    div.innerHTML = html;
     return stats;
   }
 
@@ -166,6 +169,7 @@
   }
 
   function main() {
+    getStats().then(displayStats);
     $.getJSON('http://api.namegame.willowtreemobile.com/')
       .done(data => forever(() => playRound(data)));
   }
