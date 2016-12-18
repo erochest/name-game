@@ -112,6 +112,28 @@
     return result;
   }
 
+  // weightedRand :: Array x -> (x -> Number) -> x
+  function weightedRand(array, weight) {
+    var weighted = array
+      .map(x => { return {value: x, weight: weight(x)}; })
+      .sort((a, b) => b - a);
+    var n      = Math.random(),
+        accum  = 0.0,
+        result = null;
+
+    for (var item of weighted) {
+      accum  += item.weight;
+      result  = item.value;
+      if (accum >= n) {
+        break;
+      }
+    }
+
+    return result;
+  }
+
+  window.weightedRand = weightedRand;
+
   function displayName(i, person) {
     var name = document.querySelector('#name');
     name.innerText = person.name;
