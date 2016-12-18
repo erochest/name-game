@@ -3,6 +3,19 @@
   // TODO: pre-cache images
 
   const sessionSize = 5;
+  const statsKey    = 'stats';
+
+  class Person {
+    constructor(obj) {
+      this.name = obj.name;
+      this.url  = obj.url;
+      if (obj.last_correct === undefined) {
+        this.last_correct = new Date();
+      } else {
+        this.last_correct = new Date(obj.last_correct);
+      }
+    }
+  }
 
   class Stats {
     constructor() {
@@ -34,7 +47,7 @@
 
   function getStats() {
     return localforage
-      .getItem('stats')
+      .getItem(statsKey)
       .then((value) => {
         if (value === null) {
           value = new Stats();
@@ -46,7 +59,7 @@
   }
 
   function clearStats() {
-    return localforage.setItem('stats', new Stats());
+    return localforage.setItem(statsKey, new Stats());
   }
 
   function addAttempt(correct=false) {
@@ -55,7 +68,7 @@
         stats.addAttempt(correct);
         return stats;
       })
-      .then(stats => localforage.setItem('stats', stats));
+      .then(stats => localforage.setItem(statsKey, stats));
   }
 
   window.Stats      = Stats;
@@ -114,9 +127,19 @@
 
   // weightedRand :: Array x -> (x -> Number) -> x
   function weightedRand(array, weight) {
+    return weightedRandArray(weightArray(array, weight));
+  }
+
+  function weightArray(array, weight) {
     var weighted = array
       .map(x => { return {value: x, weight: weight(x)}; })
       .sort((a, b) => b - a);
+    var weightSum = weighted.reduce((a, b) => a + b.weight, 0);
+    weighted.forEach(item => item.weight = item.weight / weightSum);
+    return weighted;
+  }
+
+  function weightedRandArray(weighted) {
     var n      = Math.random(),
         accum  = 0.0,
         result = null;
@@ -132,7 +155,29 @@
     return result;
   }
 
-  window.weightedRand = weightedRand;
+  // weightedRandomN :: Array x -> Number -> (x -> Number) -> Array x
+  function weightedRandomN(array, size, weight) {
+    var result = array;
+
+    if (size < array.length) {
+      var seen     = new Set(),
+          weighted = weightArray(array, weight);
+      result = [];
+
+      while (result.length < size) {
+        var item = weightedRandArray(weighted);
+        if (! seen.has(item.url)) {
+          seen.add(item.url);
+          result.push(item);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  window.weightedRand    = weightedRand;
+  window.weightedRandomN = weightedRandomN;
 
   function displayName(i, person) {
     var name = document.querySelector('#name');
@@ -157,7 +202,7 @@
     gallery.innerHTML = buffer;
   }
 
-  function attachListeners(resolve) {
+  function attachListeners(resolve, people) {
     var photos = document.querySelectorAll('#gallery .photo');
 
     photos.forEach(photo => {
@@ -165,12 +210,18 @@
         var name = document.querySelector('#name');
 
         if (name.dataset.n === ev.target.dataset.n) {
+          var person = people[name.dataset.n];
           ev.target.parentElement.classList.add('correct');
-          addAttempt(true).then(displayStats);
-          timeout(3500).then(resolve);
+          person.last_correct = new Date();
+          addAttempt(true)
+            .then(displayStats)
+            .then(() => savePerson(person))
+            .then(() => timeout(3500))
+            .then(resolve);
         } else {
           ev.target.parentElement.classList.add('wrong');
-          addAttempt(false).then(displayStats);
+          addAttempt(false)
+            .then(displayStats);
         }
 
       }, { once: true });
@@ -179,21 +230,58 @@
 
   // playRound :: People -> Promise x
   function playRound(people) {
-    var round   = randomn(people, sessionSize);
+    var now     = new Date();
+    var round   = weightedRandomN(people, sessionSize,
+                                  p => now - p.last_correct);
     var targetI = randomInt(sessionSize - 1);
     var testFor = round[targetI];
 
     return new Promise((resolve, reject) => {
       displayName(targetI, testFor);
       displayGallery(round);
-      attachListeners(resolve);
+      attachListeners(resolve, round);
     });
   }
+
+  function syncPeople(people) {
+    return Promise.all(people.map(syncPerson));
+  }
+
+  function syncPerson(person) {
+    var key = person.url;
+    return localforage.getItem(key)
+      .then(p => {
+        var next = null;
+        if (p === null) {
+          next = localforage.setItem(key, person);
+        } else {
+          next = Promise.resolve(p);
+        }
+        return next;
+      })
+      .then(p => new Person(p));
+  }
+
+  function savePerson(person) {
+    return localforage.setItem(person.url, person);
+  }
+
+  function readPeople() {
+    return localforage.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== statsKey)
+                                    .map(k => localforage.getItem(k))))
+      .then(values => values.filter(v => v !== null)
+                            .map(v => new Person(v)));
+  }
+  window.readPeople = readPeople;
 
   function main() {
     getStats().then(displayStats);
     $.getJSON('http://api.namegame.willowtreemobile.com/')
-      .done(data => forever(() => playRound(data)));
+      .done(data =>
+        syncPeople(data.map(item => new Person(item)))
+          .then(people => (forever(() => playRound(people))))
+      );
   }
   window.main = main;
 })();
