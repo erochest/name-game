@@ -146,11 +146,14 @@ body {
     left: 0;
     right: 0;
     transition: all 0.4s ease-in-out;
+    text-align: right;
+    font-weight: bold;
+    padding-right: 3px;
 }
 
 .wrong .name {
     color: hsla(0, 100%, 100%, 1);
-    top: 80%;
+    top: 75%;
 }
 
 .wrong .shade {
@@ -159,7 +162,7 @@ body {
 
 .correct .name {
     color: hsla(120, 100%, 100%, 1);
-    top: 80%;
+    top: 75%;
 }
 
 .correct .shade {

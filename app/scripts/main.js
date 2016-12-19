@@ -5,6 +5,66 @@
   const sessionSize = 5;
   const statsKey    = 'stats';
 
+
+  class GuessHandler {
+    constructor(people, photos, resolve) {
+      this.people  = people;
+      this.photos  = photos;
+      this.resolve = resolve;
+    }
+
+    handleEvent(ev) {
+      if (ev.key >= '1' && ev.key <= '5') {
+        var n       = +ev.key;
+        var correct = GuessHandler.handleGuess(
+            this.people,
+            this.photos[n-1].querySelector('.shade'),
+            this.resolve
+          );
+        if (correct) {
+          window.removeEventListener('keypress', this, false);
+        }
+      }
+    }
+
+    static install(people, photos, resolve) {
+      var listener = new GuessHandler(people, photos, resolve);
+
+      photos.forEach(photo =>
+        photo.addEventListener(
+          'click',
+          ev => GuessHandler.handleGuess(people, ev.target, resolve),
+          { once: true }
+        ));
+      window.addEventListener('keypress', listener, false);
+
+      return listener;
+    }
+
+    static handleGuess(people, image, resolve) {
+      var name    = document.querySelector('#name'),
+          correct = false;
+
+      if (name.dataset.n === image.dataset.n) {
+        var person = people[name.dataset.n];
+        image.parentElement.classList.add('correct');
+        person.last_correct = new Date();
+        addAttempt(true)
+          .then(displayStats)
+          .then(() => savePerson(person))
+          .then(() => timeout(3500))
+          .then(resolve);
+        correct = true;
+      } else {
+        image.parentElement.classList.add('wrong');
+        addAttempt(false)
+          .then(displayStats);
+      }
+
+      return correct;
+    }
+  }
+
   class Person {
     constructor(obj) {
       this.name = obj.name;
@@ -192,7 +252,7 @@
     people.forEach((person, i) => {
       buffer += `
         <div class="photo">
-          <div data-n="${i}" class="shade"></div>
+          <div data-n="${i}" class="shade">${i + 1}</div>
           <div class="name">${person.name}</div>
           <img src="${person.url}">
         </div>
@@ -202,30 +262,11 @@
     gallery.innerHTML = buffer;
   }
 
+
   function attachListeners(resolve, people) {
-    var photos = document.querySelectorAll('#gallery .photo');
-
-    photos.forEach(photo => {
-      photo.addEventListener('click', ev => {
-        var name = document.querySelector('#name');
-
-        if (name.dataset.n === ev.target.dataset.n) {
-          var person = people[name.dataset.n];
-          ev.target.parentElement.classList.add('correct');
-          person.last_correct = new Date();
-          addAttempt(true)
-            .then(displayStats)
-            .then(() => savePerson(person))
-            .then(() => timeout(3500))
-            .then(resolve);
-        } else {
-          ev.target.parentElement.classList.add('wrong');
-          addAttempt(false)
-            .then(displayStats);
-        }
-
-      }, { once: true });
-    });
+    var photos   = document.querySelectorAll('#gallery .photo');
+    var listener = GuessHandler.install(people, photos, resolve);
+    return listener;
   }
 
   // playRound :: People -> Promise x
