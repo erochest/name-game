@@ -67,8 +67,17 @@
 
   class Person {
     constructor(obj) {
-      this.name = obj.name;
-      this.url  = obj.url;
+      this.id   = obj.id;
+      if (obj.name != null) {
+        this.name = obj.name;
+      } else {
+        this.name = obj.firstName + ' ' + obj.lastName;
+      }
+      if (obj.headshot != null) {
+        this.url  = obj.headshot.url;
+      } else {
+        this.url  = obj.url;
+      }
       if (obj.last_correct === undefined) {
         this.last_correct = new Date();
       } else {
@@ -289,7 +298,7 @@
   }
 
   function syncPerson(person) {
-    var key = person.url;
+    var key = person.id;
     return localforage.getItem(key)
       .then(p => {
         var next = null;
@@ -318,9 +327,10 @@
 
   function main() {
     getStats().then(displayStats);
-    $.getJSON('http://api.namegame.willowtreemobile.com/')
+    // TODO: pagination
+    $.getJSON('https://willowtreeapps.com/api/v1.0/profiles')
       .done(data =>
-        syncPeople(data.map(item => new Person(item)))
+        syncPeople(data.items.map(item => new Person(item)))
           .then(people => (forever(() => playRound(people))))
       );
   }
