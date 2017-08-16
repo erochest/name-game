@@ -5,7 +5,8 @@
     "bootstrap-sass": "~3.3.5",
     "modernizr": "~2.8.1",
     "localforage": "^1.4.3",
-    "babel-polyfill": "^0.0.1"
+    "babel-polyfill": "^0.0.1",
+    "bacon": "^0.7.95"
   },
   "overrides": {
     "bootstrap-sass": {

@@ -331,31 +331,39 @@
   }
   window.readPeople = readPeople;
 
-  function* step(by) {
-    var current = 0;
-    while (true) {
-      yield current;
-      current += by;
-    }
-  }
-
   function main() {
     getStats().then(displayStats);
-    // TODO: pagination
-    step(100)
-      .map(skip => {
-        var url = 'https://willowtreeapps.com/api/v1.0/profiles?skip=' + skip;
-        $.getJSON(url)
-          .promise()
-          .done(data => {
-            console.log(data)
-            var people = data.items
-              .map(item => Person.fromAPI(item))
-              .filter(p => p.url != null)
-            syncPeople(people)
-              .then(people => (forever(() => playRound(people))))
-          });
+    downloadPeople()
+      .then(people => (forever(() => playRound(people))));
+  }
+
+  function downloadPeople() {
+    var done = false;
+    return Bacon
+      .repeat(pageno => {
+        if (done) {
+          return false;
+        } else {
+          var skip = pageno * 100;
+          var url  = 'https://willowtreeapps.com/api/v1.0/profiles?skip=' + skip;
+          return Bacon
+            .fromPromise($.getJSON(url).promise())
+            .map(data => {
+              var items = data.items;
+              done = (items.length == 0);
+              return items;
+            })
+            .takeWhile(items => items.length > 0);
+        }
       })
+      .flatMap(Bacon.fromArray)
+      .map(Person.fromAPI)
+      .filter(p => p.url != null)
+      .flatMap(p => Bacon.fromPromise(syncPerson(p)))
+      .fold([], '.concat')
+      .log('folded')
+      .toPromise();
   }
   window.main = main;
+  window.downloadPeople = downloadPeople;
 })();
