@@ -66,23 +66,29 @@
   }
 
   class Person {
-    constructor(obj) {
-      this.id   = obj.id;
-      if (obj.name != null) {
-        this.name = obj.name;
-      } else {
-        this.name = obj.firstName + ' ' + obj.lastName;
-      }
-      if (obj.headshot != null) {
-        this.url  = obj.headshot.url;
-      } else {
-        this.url  = obj.url;
-      }
-      if (obj.last_correct === undefined) {
-        this.last_correct = new Date();
-      } else {
-        this.last_correct = new Date(obj.last_correct);
-      }
+    constructor(id, name, image_url, last_correct) {
+      this.id           = id;
+      this.name         = name;
+      this.url          = image_url;
+      this.last_correct = last_correct;
+    }
+
+    static fromAPI(obj) {
+      return new Person(
+        obj.id,
+        obj.firstName + ' ' + obj.lastName,
+        obj.headshot != null ? obj.headshot.url : obj.url,
+        new Date()
+      )
+    }
+
+    static fromStorage(obj) {
+      return new Person(
+        obj.id,
+        obj.name,
+        obj.url,
+        obj.last_correct
+      );
     }
   }
 
@@ -309,7 +315,7 @@
         }
         return next;
       })
-      .then(p => new Person(p));
+      .then(p => Person.fromStorage(p));
   }
 
   function savePerson(person) {
@@ -321,18 +327,35 @@
       .then(keys => Promise.all(keys.filter(k => k !== statsKey)
                                     .map(k => localforage.getItem(k))))
       .then(values => values.filter(v => v !== null)
-                            .map(v => new Person(v)));
+                            .map(v => Person.fromStorage(v)));
   }
   window.readPeople = readPeople;
+
+  function* step(by) {
+    var current = 0;
+    while (true) {
+      yield current;
+      current += by;
+    }
+  }
 
   function main() {
     getStats().then(displayStats);
     // TODO: pagination
-    $.getJSON('https://willowtreeapps.com/api/v1.0/profiles')
-      .done(data =>
-        syncPeople(data.items.map(item => new Person(item)))
-          .then(people => (forever(() => playRound(people))))
-      );
+    step(100)
+      .map(skip => {
+        var url = 'https://willowtreeapps.com/api/v1.0/profiles?skip=' + skip;
+        $.getJSON(url)
+          .promise()
+          .done(data => {
+            console.log(data)
+            var people = data.items
+              .map(item => Person.fromAPI(item))
+              .filter(p => p.url != null)
+            syncPeople(people)
+              .then(people => (forever(() => playRound(people))))
+          });
+      })
   }
   window.main = main;
 })();

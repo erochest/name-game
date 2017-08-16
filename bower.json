@@ -4,7 +4,8 @@
   "dependencies": {
     "bootstrap-sass": "~3.3.5",
     "modernizr": "~2.8.1",
-    "localforage": "^1.4.3"
+    "localforage": "^1.4.3",
+    "babel-polyfill": "^0.0.1"
   },
   "overrides": {
     "bootstrap-sass": {
