@@ -5,6 +5,8 @@
   const sessionSize = 5;
   const statsKey    = 'stats';
 
+  const profile_url = 'https://willowtreeapps.com/api/v1.0/profiles';
+
 
   class GuessHandler {
     constructor(people, photos, resolve) {
@@ -340,22 +342,7 @@
   function downloadPeople() {
     var done = false;
     return Bacon
-      .repeat(pageno => {
-        if (done) {
-          return false;
-        } else {
-          var skip = pageno * 100;
-          var url  = 'https://willowtreeapps.com/api/v1.0/profiles?skip=' + skip;
-          return Bacon
-            .fromPromise($.getJSON(url).promise())
-            .map(data => {
-              var items = data.items;
-              done = (items.length == 0);
-              return items;
-            })
-            .takeWhile(items => items.length > 0);
-        }
-      })
+      .fromPromise($.getJSON(profile_url).promise())
       .flatMap(Bacon.fromArray)
       .map(Person.fromAPI)
       .filter(p => p.url != null)
